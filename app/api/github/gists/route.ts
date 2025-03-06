@@ -1,36 +1,35 @@
-import { NextResponse } from "next/server"
 
-// GitHub API endpoints
-const GITHUB_API_URL = "https://api.github.com"
+import { NextResponse } from 'next/server';
 
 export async function GET(request: Request) {
-  const { searchParams } = new URL(request.url)
-  const username = searchParams.get("username")
-
-  if (!username) {
-    return NextResponse.json({ error: "GitHub username is required" }, { status: 400 })
-  }
-
   try {
-    // Fetch user's gists
-    const gistsResponse = await fetch(`${GITHUB_API_URL}/users/${username}/gists`, {
-      headers: {
-        Accept: "application/vnd.github.v3+json",
-        Authorization: `token ${process.env.GITHUB_TOKEN}`,
-      },
-      next: { revalidate: 3600 }, // Cache for 1 hour
-    })
+    const { searchParams } = new URL(request.url);
+    const username = searchParams.get('username');
 
-    if (!gistsResponse.ok) {
-      throw new Error(`GitHub API error: ${gistsResponse.status}`)
+    if (!username) {
+      return NextResponse.json({ error: 'Username is required' }, { status: 400 });
     }
 
-    const gistsData = await gistsResponse.json()
+    const response = await fetch(`https://api.github.com/users/${username}/gists`, {
+      headers: {
+        'Accept': 'application/vnd.github.v3+json',
+        ...(process.env.GITHUB_TOKEN && {
+          'Authorization': `token ${process.env.GITHUB_TOKEN}`
+        })
+      }
+    });
 
-    return NextResponse.json({ gists: gistsData })
+    if (!response.ok) {
+      throw new Error(`GitHub API responded with status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    return NextResponse.json(data);
   } catch (error) {
-    console.error("Error fetching GitHub gists:", error)
-    return NextResponse.json({ error: "Failed to fetch GitHub gists" }, { status: 500 })
+    console.error('GitHub Gists API Error:', error);
+    return NextResponse.json(
+      { error: 'Failed to fetch GitHub gists' }, 
+      { status: 500 }
+    );
   }
 }
-
