@@ -69,11 +69,13 @@ export function Projects() {
 
         // Extract all unique languages
         const languages = new Set<string>()
-        data.repositories.forEach((repo: Repository) => {
-          if (repo.languages) {
-            repo.languages.forEach((lang) => languages.add(lang))
-          }
-        })
+        if (data.repositories && Array.isArray(data.repositories)) {
+          data.repositories.forEach((repo: Repository) => {
+            if (repo.languages && Array.isArray(repo.languages)) {
+              repo.languages.forEach((lang) => languages.add(lang))
+            }
+          })
+        }
 
         setAllLanguages(Array.from(languages))
       } catch (err) {
